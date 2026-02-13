@@ -1,9 +1,18 @@
-// Existing content of doom.html
-// Modifications with null safety checks added
-
-// Inside processPackageData function
-if (DataRequest.prototype.requests["/DM.DOC"]) { DataRequest.prototype.requests["/DM.DOC"].onload(); }
-
-// Other onload() calls can be modified similarly
-
-// Full original content of doom.html will go here.
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Doom</title>
+    <script>
+        function processPackageData() {
+            // Example of null safety checks
+            if (DataRequest.prototype.requests["/FILENAME"]) {
+                DataRequest.prototype.requests["/FILENAME"].onload();
+            }
+            // Implement rest of the function logic
+        }
+    </script>
+</head>
+<body>
+    <h1>Welcome to Doom</h1>
+</body>
+</html>
