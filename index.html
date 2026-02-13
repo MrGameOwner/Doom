@@ -4,11 +4,359 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DOOM - Browser Edition</title>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #0f0;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .game-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(135deg, #1a0a2e 0%, #0f0722 100%);
+        }
+
+        .header {
+            background: linear-gradient(90deg, rgba(255, 0, 0, 0.2) 0%, rgba(255, 0, 0, 0.05) 100%);
+            border-bottom: 3px solid #ff0000;
+            padding: 10px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+        }
+
+        .logo h1 {
+            font-size: 28px;
+            font-weight: bold;
+            color: #ff0000;
+            text-shadow: 2px 2px 0 #000, 4px 4px 0 rgba(255, 0, 0, 0.5), 0 0 10px rgba(255, 0, 0, 0.8);
+            letter-spacing: 3px;
+        }
+
+        .tagline {
+            color: #0f0;
+            font-size: 10px;
+            letter-spacing: 2px;
+            margin-top: 2px;
+        }
+
+        .game-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            padding: 10px;
+        }
+
+        .viewport {
+            flex: 1;
+            background: #000;
+            border: 3px solid #0f0;
+            position: relative;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.5) inset;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+        }
+
+        .crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid #0f0;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.6);
+        }
+
+        .crosshair::before {
+            content: '';
+            position: absolute;
+            width: 2px;
+            height: 6px;
+            background: #0f0;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 16px 0 #0f0;
+        }
+
+        .crosshair::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 2px;
+            background: #0f0;
+            left: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            box-shadow: 16px 0 0 #0f0;
+        }
+
+        .gui-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.8));
+            border-top: 2px solid #0f0;
+            padding: 15px;
+            gap: 20px;
+            min-height: 100px;
+            margin-top: 10px;
+            border: 2px solid #0f0;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+        }
+
+        .gui-section {
+            display: flex;
+            gap: 15px;
+        }
+
+        .left-section {
+            flex-direction: column;
+            min-width: 120px;
+        }
+
+        .stat-block {
+            display: flex;
+            flex-direction: column;
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid #0f0;
+            padding: 8px 12px;
+            gap: 4px;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: #0f0;
+            text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #0f0;
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+        }
+
+        .center-section {
+            flex: 1;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .ammo-display {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #0f0;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .weapon-current {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .weapon-name {
+            font-size: 14px;
+            color: #0f0;
+            text-shadow: 0 0 8px rgba(0, 255, 0, 0.8);
+            letter-spacing: 2px;
+        }
+
+        .ammo-count {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff0000;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+        }
+
+        .weapons-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 40px);
+            gap: 8px;
+        }
+
+        .weapon-slot {
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .weapon-slot:hover {
+            border-color: #ff0000;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.6);
+        }
+
+        .weapon-slot.active {
+            border: 2px solid #ff0000;
+            background: rgba(255, 0, 0, 0.2);
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
+        }
+
+        .minimap-container {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #0f0;
+            padding: 8px;
+            z-index: 5;
+        }
+
+        .minimap-label {
+            font-size: 8px;
+            color: #0f0;
+            text-align: center;
+            margin-bottom: 4px;
+            letter-spacing: 1px;
+        }
+
+        #minimapCanvas {
+            display: block;
+            border: 1px solid #0f0;
+            image-rendering: pixelated;
+            background: #000;
+        }
+
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .menu-overlay.hidden {
+            display: none;
+        }
+
+        .menu-content {
+            text-align: center;
+            border: 3px solid #0f0;
+            padding: 40px;
+            background: rgba(0, 0, 0, 0.8);
+            box-shadow: 0 0 50px rgba(0, 255, 0, 0.5);
+            animation: menuPulse 2s infinite;
+        }
+
+        @keyframes menuPulse {
+            0%, 100% { box-shadow: 0 0 50px rgba(0, 255, 0, 0.5); }
+            50% { box-shadow: 0 0 30px rgba(0, 255, 0, 0.3); }
+        }
+
+        .menu-title {
+            font-size: 48px;
+            color: #ff0000;
+            text-shadow: 3px 3px 0 #000, 6px 6px 0 rgba(255, 0, 0, 0.5), 0 0 20px rgba(255, 0, 0, 0.8);
+            margin-bottom: 10px;
+            letter-spacing: 4px;
+        }
+
+        .menu-subtitle {
+            color: #0f0;
+            font-size: 12px;
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.6);
+        }
+
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .menu-btn {
+            background: rgba(0, 255, 0, 0.1);
+            color: #0f0;
+            border: 2px solid #0f0;
+            padding: 12px 30px;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            transition: all 0.3s;
+            letter-spacing: 2px;
+            text-shadow: 0 0 8px rgba(0, 255, 0, 0.6);
+        }
+
+        .menu-btn:hover {
+            background: rgba(0, 255, 0, 0.3);
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.8);
+            transform: scale(1.05);
+        }
+
+        .menu-version {
+            color: #0f0;
+            font-size: 10px;
+            margin-top: 20px;
+            opacity: 0.6;
+        }
+
+        .settings-group {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin: 30px 0;
+            text-align: left;
+        }
+
+        .setting-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: #0f0;
+            font-size: 12px;
+        }
+
+        .setting-item select,
+        .setting-item input[type="range"] {
+            background: rgba(0, 255, 0, 0.1);
+            color: #0f0;
+            border: 1px solid #0f0;
+            padding: 5px;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
     <div class="game-container">
-        <!-- Header -->
         <div class="header">
             <div class="logo">
                 <h1>D00M</h1>
@@ -16,21 +364,17 @@
             </div>
         </div>
 
-        <!-- Main Game Area -->
         <div class="game-content">
-            <!-- 3D Viewport (Top) -->
             <div class="viewport">
-                <canvas id="gameCanvas" width="640" height="480"></canvas>
+                <canvas id="gameCanvas" width="800" height="600"></canvas>
                 <div class="crosshair"></div>
             </div>
 
-            <!-- GUI Bottom Section -->
             <div class="gui-bottom">
-                <!-- Left Stats -->
                 <div class="gui-section left-section">
                     <div class="stat-block">
                         <span class="stat-label">ARMOR</span>
-                        <span class="stat-value" id="armor">0%</span>
+                        <span class="stat-value" id="armor">25%</span>
                     </div>
                     <div class="stat-block">
                         <span class="stat-label">HEALTH</span>
@@ -38,7 +382,6 @@
                     </div>
                 </div>
 
-                <!-- Center Ammo/Weapons -->
                 <div class="gui-section center-section">
                     <div class="ammo-display">
                         <div class="weapon-current">
@@ -48,25 +391,22 @@
                     </div>
                 </div>
 
-                <!-- Right Weapons -->
-                <div class="gui-section right-section">
+                <div class="gui-section">
                     <div class="weapons-grid">
                         <div class="weapon-slot active" data-weapon="0">🔫</div>
-                        <div class="weapon-slot" data-weapon="1">🔫🔫</div>
-                        <div class="weapon-slot" data-weapon="2">💣</div>
-                        <div class="weapon-slot" data-weapon="3">🧨</div>
+                        <div class="weapon-slot" data-weapon="1">💥</div>
+                        <div class="weapon-slot" data-weapon="2">🚀</div>
+                        <div class="weapon-slot" data-weapon="3">⚡</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Mini Map -->
             <div class="minimap-container">
                 <div class="minimap-label">MAP</div>
                 <canvas id="minimapCanvas" width="120" height="120"></canvas>
             </div>
         </div>
 
-        <!-- Menu (Initial) -->
         <div id="mainMenu" class="menu-overlay">
             <div class="menu-content">
                 <h1 class="menu-title">D00M</h1>
@@ -75,14 +415,12 @@
                 <div class="menu-buttons">
                     <button class="menu-btn" onclick="startGame()">NEW GAME</button>
                     <button class="menu-btn" onclick="showSettings()">SETTINGS</button>
-                    <button class="menu-btn" onclick="showAbout()">ABOUT</button>
                 </div>
 
                 <div class="menu-version">v1.0 - 2026</div>
             </div>
         </div>
 
-        <!-- Settings Menu -->
         <div id="settingsMenu" class="menu-overlay hidden">
             <div class="menu-content">
                 <h1 class="menu-title">SETTINGS</h1>
@@ -92,7 +430,7 @@
                         <span>DIFFICULTY</span>
                         <select id="difficulty">
                             <option>EASY</option>
-                            <option>NORMAL</option>
+                            <option selected>NORMAL</option>
                             <option>HARD</option>
                         </select>
                     </label>
@@ -100,11 +438,6 @@
                     <label class="setting-item">
                         <span>MOUSE SENSITIVITY</span>
                         <input type="range" min="0.1" max="2" step="0.1" value="1" id="sensitivity">
-                    </label>
-
-                    <label class="setting-item">
-                        <input type="checkbox" id="soundToggle" checked>
-                        <span>SOUND ON</span>
                     </label>
                 </div>
 
@@ -115,6 +448,438 @@
         </div>
     </div>
 
-    <script src="game.js"></script>
+    <script>
+        const CANVAS = document.getElementById('gameCanvas');
+        const CTX = CANVAS.getContext('2d');
+        const MINIMAP_CANVAS = document.getElementById('minimapCanvas');
+        const MINIMAP_CTX = MINIMAP_CANVAS.getContext('2d');
+
+        let difficulty = 'NORMAL';
+
+        let gameState = {
+            running: false,
+            health: 100,
+            armor: 25,
+            currentWeapon: 0,
+            x: 50,
+            y: 50,
+            angle: 0,
+            enemies: [],
+            projectiles: [],
+            gameStarted: false,
+            kills: 0,
+            time: 0
+        };
+
+        let weapons = [
+            { name: 'PISTOL', maxAmmo: 999, ammo: 999, damage: 10, fireRate: 5 },
+            { name: 'SHOTGUN', maxAmmo: 50, ammo: 50, damage: 30, fireRate: 15 },
+            { name: 'ROCKET', maxAmmo: 20, ammo: 20, damage: 100, fireRate: 20 },
+            { name: 'BFG', maxAmmo: 40, ammo: 40, damage: 150, fireRate: 30 }
+        ];
+
+        class Map {
+            constructor() {
+                this.width = 200;
+                this.height = 200;
+                this.tiles = this.generateMap();
+            }
+
+            generateMap() {
+                const tiles = Array(this.height).fill(null).map(() => Array(this.width).fill(0));
+                
+                for (let i = 0; i < this.width; i++) {
+                    tiles[0][i] = 1;
+                    tiles[this.height - 1][i] = 1;
+                }
+                for (let i = 0; i < this.height; i++) {
+                    tiles[i][0] = 1;
+                    tiles[i][this.width - 1] = 1;
+                }
+
+                for (let i = 50; i < 150; i++) {
+                    tiles[60][i] = 1;
+                    tiles[140][i] = 1;
+                }
+                for (let i = 50; i < 150; i++) {
+                    tiles[i][100] = 1;
+                }
+
+                return tiles;
+            }
+
+            isWall(x, y) {
+                const tx = Math.floor(x);
+                const ty = Math.floor(y);
+                if (tx < 0 || tx >= this.width || ty < 0 || ty >= this.height) return true;
+                return this.tiles[ty][tx] === 1;
+            }
+        }
+
+        const map = new Map();
+
+        class Enemy {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.baseHealth = difficulty === 'EASY' ? 15 : difficulty === 'NORMAL' ? 25 : 40;
+                this.health = this.baseHealth;
+                this.speed = difficulty === 'EASY' ? 0.2 : difficulty === 'NORMAL' ? 0.35 : 0.5;
+                this.visionRange = 60;
+                this.attackCooldown = 0;
+                this.attackDamage = difficulty === 'EASY' ? 5 : difficulty === 'NORMAL' ? 10 : 15;
+            }
+
+            update() {
+                const dx = gameState.x - this.x;
+                const dy = gameState.y - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < this.visionRange && distance > 2) {
+                    const moveX = (dx / distance) * this.speed;
+                    const moveY = (dy / distance) * this.speed;
+                    
+                    const newX = this.x + moveX;
+                    const newY = this.y + moveY;
+                    
+                    if (!map.isWall(newX, newY)) {
+                        this.x = newX;
+                        this.y = newY;
+                    }
+
+                    if (this.attackCooldown <= 0 && distance < 5) {
+                        gameState.health -= this.attackDamage;
+                        this.attackCooldown = 30;
+                    }
+                }
+
+                this.attackCooldown--;
+            }
+        }
+
+        class Projectile {
+            constructor(x, y, angle, damage) {
+                this.x = x;
+                this.y = y;
+                this.angle = angle;
+                this.speed = 2;
+                this.damage = damage;
+                this.life = 200;
+            }
+
+            update() {
+                this.x += Math.cos(this.angle) * this.speed;
+                this.y += Math.sin(this.angle) * this.speed;
+                this.life--;
+
+                if (map.isWall(this.x, this.y)) {
+                    this.life = 0;
+                    return;
+                }
+
+                for (let enemy of gameState.enemies) {
+                    const dx = enemy.x - this.x;
+                    const dy = enemy.y - this.y;
+                    if (Math.sqrt(dx * dx + dy * dy) < 2) {
+                        enemy.health -= this.damage;
+                        if (enemy.health <= 0) {
+                            gameState.enemies = gameState.enemies.filter(e => e !== enemy);
+                            gameState.kills++;
+                        }
+                        this.life = 0;
+                    }
+                }
+            }
+        }
+
+        const keys = {};
+        let lastFireTime = 0;
+
+        document.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+            if (e.key === '1') gameState.currentWeapon = 0;
+            if (e.key === '2') gameState.currentWeapon = 1;
+            if (e.key === '3') gameState.currentWeapon = 2;
+            if (e.key === '4') gameState.currentWeapon = 3;
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (gameState.running) {
+                const sensitivity = parseFloat(document.getElementById('sensitivity').value || 1);
+                const centerX = CANVAS.getBoundingClientRect().left + CANVAS.getBoundingClientRect().width / 2;
+                const dx = e.clientX - centerX;
+                gameState.angle += (dx * 0.002) * sensitivity;
+            }
+        });
+
+        CANVAS.addEventListener('click', () => {
+            if (gameState.running) fireWeapon();
+        });
+
+        function fireWeapon() {
+            const now = Date.now();
+            const weapon = weapons[gameState.currentWeapon];
+            const fireRate = weapon.fireRate;
+
+            if (now - lastFireTime < fireRate || weapon.ammo <= 0) return;
+
+            lastFireTime = now;
+            weapon.ammo--;
+
+            if (gameState.currentWeapon === 1) {
+                for (let i = -2; i <= 2; i++) {
+                    const spread = i * 0.15;
+                    gameState.projectiles.push(new Projectile(gameState.x, gameState.y, gameState.angle + spread, weapon.damage));
+                }
+            } else {
+                gameState.projectiles.push(new Projectile(gameState.x, gameState.y, gameState.angle, weapon.damage));
+            }
+        }
+
+        function render3D() {
+            const width = CANVAS.width;
+            const height = CANVAS.height;
+            
+            CTX.fillStyle = '#000';
+            CTX.fillRect(0, 0, width, height);
+
+            const skyGradient = CTX.createLinearGradient(0, 0, 0, height / 2);
+            skyGradient.addColorStop(0, '#0a0520');
+            skyGradient.addColorStop(1, '#1a0a2e');
+            CTX.fillStyle = skyGradient;
+            CTX.fillRect(0, 0, width, height / 2);
+
+            const groundGradient = CTX.createLinearGradient(0, height / 2, 0, height);
+            groundGradient.addColorStop(0, '#1a1a1a');
+            groundGradient.addColorStop(1, '#0a0a0a');
+            CTX.fillStyle = groundGradient;
+            CTX.fillRect(0, height / 2, width, height / 2);
+
+            const fov = Math.PI / 3;
+            const rayCount = width;
+
+            for (let i = 0; i < rayCount; i++) {
+                const rayAngle = gameState.angle - fov / 2 + (i / rayCount) * fov;
+                let rayDistance = Infinity;
+                let hitEnemy = null;
+
+                for (let step = 0; step < 1000; step++) {
+                    const d = step * 0.1;
+                    const x = gameState.x + Math.cos(rayAngle) * d;
+                    const y = gameState.y + Math.sin(rayAngle) * d;
+
+                    if (map.isWall(x, y)) {
+                        rayDistance = d;
+                        break;
+                    }
+
+                    for (let enemy of gameState.enemies) {
+                        const dx = enemy.x - x;
+                        const dy = enemy.y - y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 1.5 && d < rayDistance) {
+                            rayDistance = d;
+                            hitEnemy = enemy;
+                        }
+                    }
+                }
+
+                if (rayDistance === Infinity) rayDistance = 100;
+
+                const wallHeight = Math.max(5, (height / (rayDistance + 0.5)));
+                const xPos = (i / rayCount) * width;
+                const yPos = (height - wallHeight) / 2;
+                const brightness = Math.max(50, 255 - (rayDistance * 5));
+
+                if (hitEnemy) {
+                    const r = Math.min(255, brightness);
+                    const g = Math.max(50, brightness * 0.3);
+                    const b = Math.max(50, brightness * 0.3);
+                    CTX.fillStyle = `rgb(${r}, ${g}, ${b})`;
+                    CTX.fillRect(xPos, yPos, width / rayCount + 1, wallHeight);
+                    CTX.fillStyle = '#ff0000';
+                    CTX.fillRect(xPos + 2, yPos + wallHeight * 0.2, width / rayCount - 4, wallHeight * 0.3);
+                } else {
+                    CTX.fillStyle = '#00aa00';
+                    CTX.globalAlpha = brightness / 255;
+                    CTX.fillRect(xPos, yPos, width / rayCount + 1, wallHeight);
+                    CTX.globalAlpha = 1;
+                }
+            }
+
+            drawWeapon();
+        }
+
+        function drawWeapon() {
+            const width = CANVAS.width;
+            const height = CANVAS.height;
+            const weapon = weapons[gameState.currentWeapon];
+
+            CTX.fillStyle = 'rgba(0, 255, 0, 0.2)';
+            CTX.fillRect(width - 100, height - 120, 90, 110);
+            
+            CTX.strokeStyle = '#0f0';
+            CTX.lineWidth = 2;
+            CTX.strokeRect(width - 100, height - 120, 90, 110);
+
+            CTX.font = 'bold 10px Courier';
+            CTX.fillStyle = '#0f0';
+            CTX.textAlign = 'center';
+            CTX.fillText(weapon.name, width - 55, height - 100);
+
+            CTX.font = 'bold 24px Courier';
+            CTX.fillStyle = weapon.ammo === 0 ? '#ff0000' : '#ffff00';
+            CTX.fillText(weapon.ammo, width - 55, height - 20);
+        }
+
+        function renderMinimap() {
+            const scale = MINIMAP_CANVAS.width / map.width;
+
+            MINIMAP_CTX.fillStyle = '#000';
+            MINIMAP_CTX.fillRect(0, 0, MINIMAP_CANVAS.width, MINIMAP_CANVAS.height);
+
+            MINIMAP_CTX.fillStyle = '#0f0';
+            for (let y = 0; y < map.height; y += 5) {
+                for (let x = 0; x < map.width; x += 5) {
+                    if (map.tiles[y][x] === 1) {
+                        MINIMAP_CTX.fillRect(x * scale, y * scale, scale * 5, scale * 5);
+                    }
+                }
+            }
+
+            MINIMAP_CTX.fillStyle = '#ff0000';
+            for (let enemy of gameState.enemies) {
+                MINIMAP_CTX.beginPath();
+                MINIMAP_CTX.arc(enemy.x * scale, enemy.y * scale, 2, 0, Math.PI * 2);
+                MINIMAP_CTX.fill();
+            }
+
+            MINIMAP_CTX.fillStyle = '#ffff00';
+            MINIMAP_CTX.beginPath();
+            MINIMAP_CTX.arc(gameState.x * scale, gameState.y * scale, 3, 0, Math.PI * 2);
+            MINIMAP_CTX.fill();
+        }
+
+        function gameLoop() {
+            gameState.time++;
+
+            const moveSpeed = 0.8;
+            if (keys['w'] || keys['arrowup']) {
+                const newX = gameState.x + Math.cos(gameState.angle) * moveSpeed;
+                const newY = gameState.y + Math.sin(gameState.angle) * moveSpeed;
+                if (!map.isWall(newX, newY)) {
+                    gameState.x = newX;
+                    gameState.y = newY;
+                }
+            }
+            if (keys['s'] || keys['arrowdown']) {
+                const newX = gameState.x - Math.cos(gameState.angle) * moveSpeed;
+                const newY = gameState.y - Math.sin(gameState.angle) * moveSpeed;
+                if (!map.isWall(newX, newY)) {
+                    gameState.x = newX;
+                    gameState.y = newY;
+                }
+            }
+            if (keys['a']) gameState.angle -= 0.08;
+            if (keys['d']) gameState.angle += 0.08;
+
+            for (let enemy of gameState.enemies) {
+                enemy.update();
+            }
+
+            gameState.projectiles = gameState.projectiles.filter(p => p.life > 0);
+            for (let projectile of gameState.projectiles) {
+                projectile.update();
+            }
+
+            document.getElementById('health').textContent = Math.max(0, gameState.health) + '%';
+            document.getElementById('armor').textContent = gameState.armor + '%';
+            document.getElementById('weaponName').textContent = weapons[gameState.currentWeapon].name;
+            document.getElementById('ammoCount').textContent = weapons[gameState.currentWeapon].ammo;
+
+            document.querySelectorAll('.weapon-slot').forEach((slot, i) => {
+                if (i === gameState.currentWeapon) {
+                    slot.classList.add('active');
+                } else {
+                    slot.classList.remove('active');
+                }
+            });
+
+            if (gameState.health <= 0) {
+                gameState.running = false;
+                alert(`GAME OVER!\n\nKills: ${gameState.kills}\nTime: ${Math.floor(gameState.time / 60)}s`);
+                document.getElementById('mainMenu').classList.remove('hidden');
+                return;
+            }
+
+            if (gameState.enemies.length < 3 && Math.random() > 0.98) {
+                let x, y;
+                do {
+                    x = Math.random() * (map.width - 40) + 20;
+                    y = Math.random() * (map.height - 40) + 20;
+                } while (map.isWall(x, y) || (Math.abs(x - gameState.x) < 30 && Math.abs(y - gameState.y) < 30));
+                gameState.enemies.push(new Enemy(x, y));
+            }
+
+            render3D();
+            renderMinimap();
+
+            if (gameState.running) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function startGame() {
+            difficulty = document.getElementById('difficulty').value || 'NORMAL';
+            
+            document.getElementById('mainMenu').classList.add('hidden');
+            gameState.running = true;
+            gameState.gameStarted = true;
+            gameState.health = 100;
+            gameState.armor = 25;
+            gameState.kills = 0;
+            gameState.time = 0;
+            
+            weapons = [
+                { name: 'PISTOL', maxAmmo: 999, ammo: 999, damage: 10, fireRate: 5 },
+                { name: 'SHOTGUN', maxAmmo: 50, ammo: 50, damage: 30, fireRate: 15 },
+                { name: 'ROCKET', maxAmmo: 20, ammo: 20, damage: 100, fireRate: 20 },
+                { name: 'BFG', maxAmmo: 40, ammo: 40, damage: 150, fireRate: 30 }
+            ];
+            gameState.currentWeapon = 0;
+            
+            gameState.enemies = [];
+            const enemyCount = difficulty === 'EASY' ? 3 : difficulty === 'NORMAL' ? 5 : 8;
+            
+            for (let i = 0; i < enemyCount; i++) {
+                let x, y;
+                do {
+                    x = Math.random() * (map.width - 40) + 20;
+                    y = Math.random() * (map.height - 40) + 20;
+                } while (map.isWall(x, y) || (Math.abs(x - gameState.x) < 40 && Math.abs(y - gameState.y) < 40));
+                gameState.enemies.push(new Enemy(x, y));
+            }
+
+            gameLoop();
+        }
+
+        function showSettings() {
+            document.getElementById('mainMenu').classList.add('hidden');
+            document.getElementById('settingsMenu').classList.remove('hidden');
+        }
+
+        function hideSettings() {
+            document.getElementById('settingsMenu').classList.add('hidden');
+            document.getElementById('mainMenu').classList.remove('hidden');
+        }
+
+        window.addEventListener('load', () => {
+            console.log('D00M Browser Edition loaded!');
+        });
+    </script>
 </body>
 </html>
