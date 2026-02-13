@@ -360,7 +360,7 @@
         <div class="header">
             <div class="logo">
                 <h1>D00M</h1>
-                <p class="tagline">BROWSER EDITION</p>
+                <p class="tagline">SEWER SYSTEM - BROWSER EDITION</p>
             </div>
         </div>
 
@@ -402,7 +402,7 @@
             </div>
 
             <div class="minimap-container">
-                <div class="minimap-label">MAP</div>
+                <div class="minimap-label">SEWER MAP</div>
                 <canvas id="minimapCanvas" width="120" height="120"></canvas>
             </div>
         </div>
@@ -410,14 +410,14 @@
         <div id="mainMenu" class="menu-overlay">
             <div class="menu-content">
                 <h1 class="menu-title">D00M</h1>
-                <p class="menu-subtitle">BROWSER EDITION</p>
+                <p class="menu-subtitle">SEWER SYSTEM - BROWSER EDITION</p>
                 
                 <div class="menu-buttons">
                     <button class="menu-btn" onclick="startGame()">NEW GAME</button>
                     <button class="menu-btn" onclick="showSettings()">SETTINGS</button>
                 </div>
 
-                <div class="menu-version">v1.0 - 2026</div>
+                <div class="menu-version">v1.0 - SEWER EDITION 2026</div>
             </div>
         </div>
 
@@ -480,14 +480,15 @@
 
         class Map {
             constructor() {
-                this.width = 200;
-                this.height = 200;
-                this.tiles = this.generateMap();
+                this.width = 300;
+                this.height = 300;
+                this.tiles = this.generateSewerMap();
             }
 
-            generateMap() {
+            generateSewerMap() {
                 const tiles = Array(this.height).fill(null).map(() => Array(this.width).fill(0));
                 
+                // Outer walls
                 for (let i = 0; i < this.width; i++) {
                     tiles[0][i] = 1;
                     tiles[this.height - 1][i] = 1;
@@ -497,12 +498,70 @@
                     tiles[i][this.width - 1] = 1;
                 }
 
-                for (let i = 50; i < 150; i++) {
-                    tiles[60][i] = 1;
-                    tiles[140][i] = 1;
+                // Main horizontal sewer tunnels
+                for (let i = 50; i < 250; i++) {
+                    tiles[75][i] = 1;
+                    tiles[150][i] = 1;
+                    tiles[225][i] = 1;
                 }
-                for (let i = 50; i < 150; i++) {
-                    tiles[i][100] = 1;
+
+                // Main vertical sewer tunnels
+                for (let i = 50; i < 250; i++) {
+                    tiles[i][80] = 1;
+                    tiles[i][160] = 1;
+                    tiles[i][240] = 1;
+                }
+
+                // Central chamber (large open area)
+                for (let y = 110; y < 190; y++) {
+                    for (let x = 110; x < 190; x++) {
+                        tiles[y][x] = 0;
+                    }
+                }
+
+                // Side chambers
+                for (let y = 50; y < 75; y++) {
+                    for (let x = 100; x < 200; x++) {
+                        tiles[y][x] = 0;
+                    }
+                }
+                for (let y = 225; y < 250; y++) {
+                    for (let x = 100; x < 200; x++) {
+                        tiles[y][x] = 0;
+                    }
+                }
+
+                // East and West chambers
+                for (let y = 100; y < 200; y++) {
+                    for (let x = 20; x < 50; x++) {
+                        tiles[y][x] = 0;
+                    }
+                    for (let x = 250; x < 280; x++) {
+                        tiles[y][x] = 0;
+                    }
+                }
+
+                // Pillars in central area
+                for (let y = 130; y < 170; y += 15) {
+                    for (let x = 130; x < 170; x += 15) {
+                        tiles[y][x] = 1;
+                        tiles[y][x + 1] = 1;
+                        tiles[y + 1][x] = 1;
+                        tiles[y + 1][x + 1] = 1;
+                    }
+                }
+
+                // Cross corridors for complexity
+                for (let i = 60; i < 240; i++) {
+                    tiles[120][i] = 0;
+                    tiles[180][i] = 0;
+                }
+
+                // Small connecting passages
+                for (let i = 85; i < 95; i++) {
+                    tiles[75][i] = 0;
+                    tiles[150][i] = 0;
+                    tiles[225][i] = 0;
                 }
 
                 return tiles;
@@ -641,21 +700,22 @@
         }
 
         function render3D() {
-            const width = CANVAS.width;
-            const height = CANVAS.height;
+            let width = CANVAS.width;
+            let height = CANVAS.height;
             
             CTX.fillStyle = '#000';
             CTX.fillRect(0, 0, width, height);
 
+            // Sewer environment - darker, damp look
             const skyGradient = CTX.createLinearGradient(0, 0, 0, height / 2);
-            skyGradient.addColorStop(0, '#0a0520');
-            skyGradient.addColorStop(1, '#1a0a2e');
+            skyGradient.addColorStop(0, '#0a1a1a');
+            skyGradient.addColorStop(1, '#1a2a2a');
             CTX.fillStyle = skyGradient;
             CTX.fillRect(0, 0, width, height / 2);
 
             const groundGradient = CTX.createLinearGradient(0, height / 2, 0, height);
-            groundGradient.addColorStop(0, '#1a1a1a');
-            groundGradient.addColorStop(1, '#0a0a0a');
+            groundGradient.addColorStop(0, '#0d1a0d');
+            groundGradient.addColorStop(1, '#050a05');
             CTX.fillStyle = groundGradient;
             CTX.fillRect(0, height / 2, width, height / 2);
 
@@ -704,10 +764,13 @@
                     CTX.fillStyle = '#ff0000';
                     CTX.fillRect(xPos + 2, yPos + wallHeight * 0.2, width / rayCount - 4, wallHeight * 0.3);
                 } else {
-                    CTX.fillStyle = '#00aa00';
-                    CTX.globalAlpha = brightness / 255;
+                    // Sewer walls - greenish mossy look
+                    const wallBrightness = brightness;
+                    const r = Math.max(30, wallBrightness * 0.3);
+                    const g = wallBrightness * 0.6;
+                    const b = Math.max(50, wallBrightness * 0.4);
+                    CTX.fillStyle = `rgb(${r}, ${g}, ${b})`;
                     CTX.fillRect(xPos, yPos, width / rayCount + 1, wallHeight);
-                    CTX.globalAlpha = 1;
                 }
             }
 
@@ -715,8 +778,8 @@
         }
 
         function drawWeapon() {
-            const width = CANVAS.width;
-            const height = CANVAS.height;
+            let width = CANVAS.width;
+            let height = CANVAS.height;
             const weapon = weapons[gameState.currentWeapon];
 
             CTX.fillStyle = 'rgba(0, 255, 0, 0.2)';
@@ -742,6 +805,7 @@
             MINIMAP_CTX.fillStyle = '#000';
             MINIMAP_CTX.fillRect(0, 0, MINIMAP_CANVAS.width, MINIMAP_CANVAS.height);
 
+            // Draw sewer walls in green
             MINIMAP_CTX.fillStyle = '#0f0';
             for (let y = 0; y < map.height; y += 5) {
                 for (let x = 0; x < map.width; x += 5) {
@@ -751,6 +815,7 @@
                 }
             }
 
+            // Draw enemies in red
             MINIMAP_CTX.fillStyle = '#ff0000';
             for (let enemy of gameState.enemies) {
                 MINIMAP_CTX.beginPath();
@@ -758,6 +823,7 @@
                 MINIMAP_CTX.fill();
             }
 
+            // Draw player in yellow
             MINIMAP_CTX.fillStyle = '#ffff00';
             MINIMAP_CTX.beginPath();
             MINIMAP_CTX.arc(gameState.x * scale, gameState.y * scale, 3, 0, Math.PI * 2);
@@ -816,7 +882,7 @@
                 return;
             }
 
-            if (gameState.enemies.length < 3 && Math.random() > 0.98) {
+            if (gameState.enemies.length < 5 && Math.random() > 0.98) {
                 let x, y;
                 do {
                     x = Math.random() * (map.width - 40) + 20;
@@ -878,7 +944,7 @@
         }
 
         window.addEventListener('load', () => {
-            console.log('D00M Browser Edition loaded!');
+            console.log('D00M Sewer System - Browser Edition loaded!');
         });
     </script>
 </body>
