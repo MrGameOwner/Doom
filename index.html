@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOOM - Browser Edition</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <h1>D00M</h1>
+                <p class="tagline">BROWSER EDITION</p>
+            </div>
+        </div>
+
+        <!-- Main Game Area -->
+        <div class="game-content">
+            <!-- 3D Viewport (Top) -->
+            <div class="viewport">
+                <canvas id="gameCanvas" width="640" height="480"></canvas>
+                <div class="crosshair"></div>
+            </div>
+
+            <!-- GUI Bottom Section -->
+            <div class="gui-bottom">
+                <!-- Left Stats -->
+                <div class="gui-section left-section">
+                    <div class="stat-block">
+                        <span class="stat-label">ARMOR</span>
+                        <span class="stat-value" id="armor">0%</span>
+                    </div>
+                    <div class="stat-block">
+                        <span class="stat-label">HEALTH</span>
+                        <span class="stat-value" id="health">100%</span>
+                    </div>
+                </div>
+
+                <!-- Center Ammo/Weapons -->
+                <div class="gui-section center-section">
+                    <div class="ammo-display">
+                        <div class="weapon-current">
+                            <span class="weapon-name" id="weaponName">PISTOL</span>
+                            <span class="ammo-count" id="ammoCount">999</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Weapons -->
+                <div class="gui-section right-section">
+                    <div class="weapons-grid">
+                        <div class="weapon-slot active" data-weapon="0">🔫</div>
+                        <div class="weapon-slot" data-weapon="1">🔫🔫</div>
+                        <div class="weapon-slot" data-weapon="2">💣</div>
+                        <div class="weapon-slot" data-weapon="3">🧨</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mini Map -->
+            <div class="minimap-container">
+                <div class="minimap-label">MAP</div>
+                <canvas id="minimapCanvas" width="120" height="120"></canvas>
+            </div>
+        </div>
+
+        <!-- Menu (Initial) -->
+        <div id="mainMenu" class="menu-overlay">
+            <div class="menu-content">
+                <h1 class="menu-title">D00M</h1>
+                <p class="menu-subtitle">BROWSER EDITION</p>
+                
+                <div class="menu-buttons">
+                    <button class="menu-btn" onclick="startGame()">NEW GAME</button>
+                    <button class="menu-btn" onclick="showSettings()">SETTINGS</button>
+                    <button class="menu-btn" onclick="showAbout()">ABOUT</button>
+                </div>
+
+                <div class="menu-version">v1.0 - 2026</div>
+            </div>
+        </div>
+
+        <!-- Settings Menu -->
+        <div id="settingsMenu" class="menu-overlay hidden">
+            <div class="menu-content">
+                <h1 class="menu-title">SETTINGS</h1>
+                
+                <div class="settings-group">
+                    <label class="setting-item">
+                        <span>DIFFICULTY</span>
+                        <select id="difficulty">
+                            <option>EASY</option>
+                            <option>NORMAL</option>
+                            <option>HARD</option>
+                        </select>
+                    </label>
+                    
+                    <label class="setting-item">
+                        <span>MOUSE SENSITIVITY</span>
+                        <input type="range" min="0.1" max="2" step="0.1" value="1" id="sensitivity">
+                    </label>
+
+                    <label class="setting-item">
+                        <input type="checkbox" id="soundToggle" checked>
+                        <span>SOUND ON</span>
+                    </label>
+                </div>
+
+                <div class="menu-buttons">
+                    <button class="menu-btn" onclick="hideSettings()">BACK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
