@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,7 +24,6 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
-            background: linear-gradient(135deg, #1a0a2e 0%, #0f0722 100%);
         }
 
         .header {
@@ -116,11 +115,11 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
-            background: linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.8));
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.9));
             border-top: 2px solid #0f0;
             padding: 15px;
             gap: 20px;
-            min-height: 100px;
+            min-height: 90px;
             margin-top: 10px;
             border: 2px solid #0f0;
             box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
@@ -129,11 +128,12 @@
         .gui-section {
             display: flex;
             gap: 15px;
+            align-items: center;
         }
 
         .left-section {
             flex-direction: column;
-            min-width: 120px;
+            min-width: 150px;
         }
 
         .stat-block {
@@ -168,32 +168,33 @@
         .ammo-display {
             background: rgba(0, 0, 0, 0.7);
             border: 2px solid #0f0;
-            padding: 20px;
+            padding: 15px 30px;
             text-align: center;
+            min-width: 150px;
         }
 
         .weapon-current {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
         }
 
         .weapon-name {
-            font-size: 14px;
+            font-size: 12px;
             color: #0f0;
             text-shadow: 0 0 8px rgba(0, 255, 0, 0.8);
             letter-spacing: 2px;
         }
 
         .ammo-count {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: bold;
             color: #ff0000;
             text-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
         }
 
-        .weapons-grid {
+        .right-section {
             display: grid;
             grid-template-columns: repeat(2, 40px);
             gap: 8px;
@@ -366,19 +367,19 @@
 
         <div class="game-content">
             <div class="viewport">
-                <canvas id="gameCanvas" width="800" height="600"></canvas>
+                <canvas id="gameCanvas" width="1024" height="600"></canvas>
                 <div class="crosshair"></div>
             </div>
 
             <div class="gui-bottom">
                 <div class="gui-section left-section">
                     <div class="stat-block">
-                        <span class="stat-label">ARMOR</span>
-                        <span class="stat-value" id="armor">25%</span>
-                    </div>
-                    <div class="stat-block">
                         <span class="stat-label">HEALTH</span>
                         <span class="stat-value" id="health">100%</span>
+                    </div>
+                    <div class="stat-block">
+                        <span class="stat-label">ARMOR</span>
+                        <span class="stat-value" id="armor">25%</span>
                     </div>
                 </div>
 
@@ -391,19 +392,17 @@
                     </div>
                 </div>
 
-                <div class="gui-section">
-                    <div class="weapons-grid">
-                        <div class="weapon-slot active" data-weapon="0">🔫</div>
-                        <div class="weapon-slot" data-weapon="1">💥</div>
-                        <div class="weapon-slot" data-weapon="2">🚀</div>
-                        <div class="weapon-slot" data-weapon="3">⚡</div>
-                    </div>
+                <div class="gui-section right-section">
+                    <div class="weapon-slot active" data-weapon="0">🔫</div>
+                    <div class="weapon-slot" data-weapon="1">💥</div>
+                    <div class="weapon-slot" data-weapon="2">🚀</div>
+                    <div class="weapon-slot" data-weapon="3">⚡</div>
                 </div>
             </div>
 
             <div class="minimap-container">
                 <div class="minimap-label">SEWER MAP</div>
-                <canvas id="minimapCanvas" width="120" height="120"></canvas>
+                <canvas id="minimapCanvas" width="100" height="100"></canvas>
             </div>
         </div>
 
@@ -461,8 +460,8 @@
             health: 100,
             armor: 25,
             currentWeapon: 0,
-            x: 50,
-            y: 50,
+            x: 100,
+            y: 100,
             angle: 0,
             enemies: [],
             projectiles: [],
@@ -480,98 +479,66 @@
 
         class Map {
             constructor() {
-                this.width = 300;
-                this.height = 300;
-                this.tiles = this.generateSewerMap();
+                this.width = 200;
+                this.height = 200;
+                this.tileSize = 1;
+                this.generateSewerMap();
             }
 
             generateSewerMap() {
-                const tiles = Array(this.height).fill(null).map(() => Array(this.width).fill(0));
-                
-                // Outer walls
-                for (let i = 0; i < this.width; i++) {
-                    tiles[0][i] = 1;
-                    tiles[this.height - 1][i] = 1;
-                }
-                for (let i = 0; i < this.height; i++) {
-                    tiles[i][0] = 1;
-                    tiles[i][this.width - 1] = 1;
-                }
-
-                // Main horizontal sewer tunnels
-                for (let i = 50; i < 250; i++) {
-                    tiles[75][i] = 1;
-                    tiles[150][i] = 1;
-                    tiles[225][i] = 1;
-                }
-
-                // Main vertical sewer tunnels
-                for (let i = 50; i < 250; i++) {
-                    tiles[i][80] = 1;
-                    tiles[i][160] = 1;
-                    tiles[i][240] = 1;
-                }
-
-                // Central chamber (large open area)
-                for (let y = 110; y < 190; y++) {
-                    for (let x = 110; x < 190; x++) {
-                        tiles[y][x] = 0;
+                this.tiles = [];
+                for (let y = 0; y < this.height; y++) {
+                    this.tiles[y] = [];
+                    for (let x = 0; x < this.width; x++) {
+                        this.tiles[y][x] = 0;
                     }
                 }
 
-                // Side chambers
-                for (let y = 50; y < 75; y++) {
-                    for (let x = 100; x < 200; x++) {
-                        tiles[y][x] = 0;
-                    }
+                // Create borders
+                for (let x = 0; x < this.width; x++) {
+                    this.tiles[0][x] = 1;
+                    this.tiles[this.height - 1][x] = 1;
                 }
-                for (let y = 225; y < 250; y++) {
-                    for (let x = 100; x < 200; x++) {
-                        tiles[y][x] = 0;
-                    }
+                for (let y = 0; y < this.height; y++) {
+                    this.tiles[y][0] = 1;
+                    this.tiles[y][this.width - 1] = 1;
                 }
 
-                // East and West chambers
-                for (let y = 100; y < 200; y++) {
-                    for (let x = 20; x < 50; x++) {
-                        tiles[y][x] = 0;
+                // Main horizontal corridors
+                for (let x = 10; x < this.width - 10; x++) {
+                    for (let y = 50; y < 52; y++) this.tiles[y][x] = 1;
+                    for (let y = 100; y < 102; y++) this.tiles[y][x] = 1;
+                    for (let y = 150; y < 152; y++) this.tiles[y][x] = 1;
+                }
+
+                // Main vertical corridors
+                for (let y = 10; y < this.height - 10; y++) {
+                    for (let x = 50; x < 52; x++) this.tiles[y][x] = 1;
+                    for (let x = 100; x < 102; x++) this.tiles[y][x] = 1;
+                    for (let x = 150; x < 152; x++) this.tiles[y][x] = 1;
+                }
+
+                // Pillars
+                for (let py = 60; py < 140; py += 20) {
+                    for (let px = 60; px < 140; px += 20) {
+                        this.tiles[py][px] = 1;
+                        this.tiles[py + 1][px] = 1;
+                        this.tiles[py][px + 1] = 1;
+                        this.tiles[py + 1][px + 1] = 1;
                     }
-                    for (let x = 250; x < 280; x++) {
-                        tiles[y][x] = 0;
-                    }
                 }
-
-                // Pillars in central area
-                for (let y = 130; y < 170; y += 15) {
-                    for (let x = 130; x < 170; x += 15) {
-                        tiles[y][x] = 1;
-                        tiles[y][x + 1] = 1;
-                        tiles[y + 1][x] = 1;
-                        tiles[y + 1][x + 1] = 1;
-                    }
-                }
-
-                // Cross corridors for complexity
-                for (let i = 60; i < 240; i++) {
-                    tiles[120][i] = 0;
-                    tiles[180][i] = 0;
-                }
-
-                // Small connecting passages
-                for (let i = 85; i < 95; i++) {
-                    tiles[75][i] = 0;
-                    tiles[150][i] = 0;
-                    tiles[225][i] = 0;
-                }
-
-                return tiles;
             }
 
             isWall(x, y) {
                 const tx = Math.floor(x);
                 const ty = Math.floor(y);
                 if (tx < 0 || tx >= this.width || ty < 0 || ty >= this.height) return true;
+                if (ty >= this.tiles.length || tx >= this.tiles[ty].length) return true;
                 return this.tiles[ty][tx] === 1;
+            }
+
+            getHeightAt(x, y) {
+                return this.isWall(x, y) ? 1 : 0;
             }
         }
 
@@ -583,7 +550,7 @@
                 this.y = y;
                 this.baseHealth = difficulty === 'EASY' ? 15 : difficulty === 'NORMAL' ? 25 : 40;
                 this.health = this.baseHealth;
-                this.speed = difficulty === 'EASY' ? 0.2 : difficulty === 'NORMAL' ? 0.35 : 0.5;
+                this.speed = difficulty === 'EASY' ? 0.15 : difficulty === 'NORMAL' ? 0.25 : 0.4;
                 this.visionRange = 60;
                 this.attackCooldown = 0;
                 this.attackDamage = difficulty === 'EASY' ? 5 : difficulty === 'NORMAL' ? 10 : 15;
@@ -621,9 +588,9 @@
                 this.x = x;
                 this.y = y;
                 this.angle = angle;
-                this.speed = 2;
+                this.speed = 1.5;
                 this.damage = damage;
-                this.life = 200;
+                this.life = 300;
             }
 
             update() {
@@ -653,6 +620,7 @@
 
         const keys = {};
         let lastFireTime = 0;
+        let mouseX = CANVAS.width / 2;
 
         document.addEventListener('keydown', (e) => {
             keys[e.key.toLowerCase()] = true;
@@ -669,9 +637,11 @@
         document.addEventListener('mousemove', (e) => {
             if (gameState.running) {
                 const sensitivity = parseFloat(document.getElementById('sensitivity').value || 1);
-                const centerX = CANVAS.getBoundingClientRect().left + CANVAS.getBoundingClientRect().width / 2;
+                const rect = CANVAS.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
                 const dx = e.clientX - centerX;
-                gameState.angle += (dx * 0.002) * sensitivity;
+                gameState.angle += (dx * 0.005) * sensitivity;
+                mouseX = e.clientX;
             }
         });
 
@@ -690,6 +660,7 @@
             weapon.ammo--;
 
             if (gameState.currentWeapon === 1) {
+                // Shotgun spread
                 for (let i = -2; i <= 2; i++) {
                     const spread = i * 0.15;
                     gameState.projectiles.push(new Projectile(gameState.x, gameState.y, gameState.angle + spread, weapon.damage));
@@ -700,140 +671,144 @@
         }
 
         function render3D() {
-            let width = CANVAS.width;
-            let height = CANVAS.height;
-            
-            CTX.fillStyle = '#000';
+            const width = CANVAS.width;
+            const height = CANVAS.height;
+
+            // Clear canvas
+            CTX.fillStyle = '#000000';
             CTX.fillRect(0, 0, width, height);
 
-            // Sewer environment - darker, damp look
-            const skyGradient = CTX.createLinearGradient(0, 0, 0, height / 2);
-            skyGradient.addColorStop(0, '#0a1a1a');
-            skyGradient.addColorStop(1, '#1a2a2a');
-            CTX.fillStyle = skyGradient;
+            // Draw sky (top half)
+            CTX.fillStyle = '#1a1a2e';
             CTX.fillRect(0, 0, width, height / 2);
 
-            const groundGradient = CTX.createLinearGradient(0, height / 2, 0, height);
-            groundGradient.addColorStop(0, '#0d1a0d');
-            groundGradient.addColorStop(1, '#050a05');
-            CTX.fillStyle = groundGradient;
+            // Draw floor (bottom half)
+            CTX.fillStyle = '#0f0f1e';
             CTX.fillRect(0, height / 2, width, height / 2);
 
-            const fov = Math.PI / 3;
+            // Raycasting
             const rayCount = width;
+            const fov = Math.PI / 2.5;
 
             for (let i = 0; i < rayCount; i++) {
-                const rayAngle = gameState.angle - fov / 2 + (i / rayCount) * fov;
-                let rayDistance = Infinity;
-                let hitEnemy = null;
+                const angle = gameState.angle - fov / 2 + (i / rayCount) * fov;
+                const result = castRay(angle);
 
-                for (let step = 0; step < 1000; step++) {
-                    const d = step * 0.1;
-                    const x = gameState.x + Math.cos(rayAngle) * d;
-                    const y = gameState.y + Math.sin(rayAngle) * d;
-
-                    if (map.isWall(x, y)) {
-                        rayDistance = d;
-                        break;
+                if (result.distance > 0) {
+                    const wallHeight = Math.max(10, (height * 0.5) / (result.distance + 0.1));
+                    const yOffset = (height - wallHeight) / 2;
+                    
+                    let color;
+                    if (result.isEnemy) {
+                        color = '#cc2200';
+                    } else {
+                        const brightness = Math.max(50, 255 - (result.distance * 15));
+                        const r = brightness * 0.3;
+                        const g = brightness * 0.6;
+                        const b = brightness * 0.3;
+                        color = `rgb(${r}, ${g}, ${b})`;
                     }
 
-                    for (let enemy of gameState.enemies) {
-                        const dx = enemy.x - x;
-                        const dy = enemy.y - y;
-                        const dist = Math.sqrt(dx * dx + dy * dy);
-                        if (dist < 1.5 && d < rayDistance) {
-                            rayDistance = d;
-                            hitEnemy = enemy;
-                        }
-                    }
-                }
-
-                if (rayDistance === Infinity) rayDistance = 100;
-
-                const wallHeight = Math.max(5, (height / (rayDistance + 0.5)));
-                const xPos = (i / rayCount) * width;
-                const yPos = (height - wallHeight) / 2;
-                const brightness = Math.max(50, 255 - (rayDistance * 5));
-
-                if (hitEnemy) {
-                    const r = Math.min(255, brightness);
-                    const g = Math.max(50, brightness * 0.3);
-                    const b = Math.max(50, brightness * 0.3);
-                    CTX.fillStyle = `rgb(${r}, ${g}, ${b})`;
-                    CTX.fillRect(xPos, yPos, width / rayCount + 1, wallHeight);
-                    CTX.fillStyle = '#ff0000';
-                    CTX.fillRect(xPos + 2, yPos + wallHeight * 0.2, width / rayCount - 4, wallHeight * 0.3);
-                } else {
-                    // Sewer walls - greenish mossy look
-                    const wallBrightness = brightness;
-                    const r = Math.max(30, wallBrightness * 0.3);
-                    const g = wallBrightness * 0.6;
-                    const b = Math.max(50, wallBrightness * 0.4);
-                    CTX.fillStyle = `rgb(${r}, ${g}, ${b})`;
-                    CTX.fillRect(xPos, yPos, width / rayCount + 1, wallHeight);
+                    CTX.fillStyle = color;
+                    CTX.fillRect(i, yOffset, 1, wallHeight);
                 }
             }
 
             drawWeapon();
         }
 
-        function drawWeapon() {
-            let width = CANVAS.width;
-            let height = CANVAS.height;
-            const weapon = weapons[gameState.currentWeapon];
+        function castRay(angle) {
+            const step = 0.1;
+            const maxDistance = 100;
+            let distance = 0;
+            let isEnemy = false;
 
-            CTX.fillStyle = 'rgba(0, 255, 0, 0.2)';
-            CTX.fillRect(width - 100, height - 120, 90, 110);
-            
-            CTX.strokeStyle = '#0f0';
-            CTX.lineWidth = 2;
-            CTX.strokeRect(width - 100, height - 120, 90, 110);
+            for (let d = 0; d < maxDistance; d += step) {
+                const x = gameState.x + Math.cos(angle) * d;
+                const y = gameState.y + Math.sin(angle) * d;
 
-            CTX.font = 'bold 10px Courier';
-            CTX.fillStyle = '#0f0';
-            CTX.textAlign = 'center';
-            CTX.fillText(weapon.name, width - 55, height - 100);
+                if (map.isWall(x, y)) {
+                    return { distance: d, isEnemy: false };
+                }
 
-            CTX.font = 'bold 24px Courier';
-            CTX.fillStyle = weapon.ammo === 0 ? '#ff0000' : '#ffff00';
-            CTX.fillText(weapon.ammo, width - 55, height - 20);
-        }
-
-        function renderMinimap() {
-            const scale = MINIMAP_CANVAS.width / map.width;
-
-            MINIMAP_CTX.fillStyle = '#000';
-            MINIMAP_CTX.fillRect(0, 0, MINIMAP_CANVAS.width, MINIMAP_CANVAS.height);
-
-            // Draw sewer walls in green
-            MINIMAP_CTX.fillStyle = '#0f0';
-            for (let y = 0; y < map.height; y += 5) {
-                for (let x = 0; x < map.width; x += 5) {
-                    if (map.tiles[y][x] === 1) {
-                        MINIMAP_CTX.fillRect(x * scale, y * scale, scale * 5, scale * 5);
+                for (let enemy of gameState.enemies) {
+                    const dx = enemy.x - x;
+                    const dy = enemy.y - y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 1.5) {
+                        return { distance: d, isEnemy: true };
                     }
                 }
             }
 
-            // Draw enemies in red
+            return { distance: maxDistance, isEnemy: false };
+        }
+
+        function drawWeapon() {
+            const width = CANVAS.width;
+            const height = CANVAS.height;
+            const weapon = weapons[gameState.currentWeapon];
+
+            // Simple weapon sprite
+            CTX.fillStyle = 'rgba(0, 200, 0, 0.3)';
+            CTX.fillRect(width - 120, height - 150, 100, 140);
+            
+            CTX.strokeStyle = '#00ff00';
+            CTX.lineWidth = 2;
+            CTX.strokeRect(width - 120, height - 150, 100, 140);
+
+            CTX.fillStyle = '#00ff00';
+            CTX.font = 'bold 14px Courier';
+            CTX.textAlign = 'center';
+            CTX.fillText(weapon.name, width - 70, height - 100);
+        }
+
+        function renderMinimap() {
+            const scaleX = MINIMAP_CANVAS.width / map.width;
+            const scaleY = MINIMAP_CANVAS.height / map.height;
+
+            MINIMAP_CTX.fillStyle = '#000000';
+            MINIMAP_CTX.fillRect(0, 0, MINIMAP_CANVAS.width, MINIMAP_CANVAS.height);
+
+            // Draw walls
+            MINIMAP_CTX.fillStyle = '#00ff00';
+            for (let y = 0; y < map.height; y++) {
+                for (let x = 0; x < map.width; x++) {
+                    if (map.tiles[y] && map.tiles[y][x] === 1) {
+                        MINIMAP_CTX.fillRect(x * scaleX, y * scaleY, scaleX, scaleY);
+                    }
+                }
+            }
+
+            // Draw enemies
             MINIMAP_CTX.fillStyle = '#ff0000';
             for (let enemy of gameState.enemies) {
                 MINIMAP_CTX.beginPath();
-                MINIMAP_CTX.arc(enemy.x * scale, enemy.y * scale, 2, 0, Math.PI * 2);
+                MINIMAP_CTX.arc(enemy.x * scaleX, enemy.y * scaleY, 2, 0, Math.PI * 2);
                 MINIMAP_CTX.fill();
             }
 
-            // Draw player in yellow
+            // Draw player
             MINIMAP_CTX.fillStyle = '#ffff00';
             MINIMAP_CTX.beginPath();
-            MINIMAP_CTX.arc(gameState.x * scale, gameState.y * scale, 3, 0, Math.PI * 2);
+            MINIMAP_CTX.arc(gameState.x * scaleX, gameState.y * scaleY, 3, 0, Math.PI * 2);
             MINIMAP_CTX.fill();
+
+            // Draw player direction
+            MINIMAP_CTX.strokeStyle = '#ffff00';
+            MINIMAP_CTX.beginPath();
+            MINIMAP_CTX.moveTo(gameState.x * scaleX, gameState.y * scaleY);
+            MINIMAP_CTX.lineTo(
+                (gameState.x + Math.cos(gameState.angle) * 10) * scaleX,
+                (gameState.y + Math.sin(gameState.angle) * 10) * scaleY
+            );
+            MINIMAP_CTX.stroke();
         }
 
         function gameLoop() {
             gameState.time++;
 
-            const moveSpeed = 0.8;
+            const moveSpeed = 0.5;
             if (keys['w'] || keys['arrowup']) {
                 const newX = gameState.x + Math.cos(gameState.angle) * moveSpeed;
                 const newY = gameState.y + Math.sin(gameState.angle) * moveSpeed;
@@ -882,13 +857,18 @@
                 return;
             }
 
-            if (gameState.enemies.length < 5 && Math.random() > 0.98) {
+            if (gameState.enemies.length < 4 && Math.random() > 0.97) {
                 let x, y;
+                let attempts = 0;
                 do {
-                    x = Math.random() * (map.width - 40) + 20;
-                    y = Math.random() * (map.height - 40) + 20;
-                } while (map.isWall(x, y) || (Math.abs(x - gameState.x) < 30 && Math.abs(y - gameState.y) < 30));
-                gameState.enemies.push(new Enemy(x, y));
+                    x = 50 + Math.random() * 100;
+                    y = 50 + Math.random() * 100;
+                    attempts++;
+                } while (map.isWall(x, y) && attempts < 10);
+                
+                if (!map.isWall(x, y)) {
+                    gameState.enemies.push(new Enemy(x, y));
+                }
             }
 
             render3D();
@@ -909,6 +889,9 @@
             gameState.armor = 25;
             gameState.kills = 0;
             gameState.time = 0;
+            gameState.x = 100;
+            gameState.y = 100;
+            gameState.angle = 0;
             
             weapons = [
                 { name: 'PISTOL', maxAmmo: 999, ammo: 999, damage: 10, fireRate: 5 },
@@ -919,15 +902,22 @@
             gameState.currentWeapon = 0;
             
             gameState.enemies = [];
-            const enemyCount = difficulty === 'EASY' ? 3 : difficulty === 'NORMAL' ? 5 : 8;
+            gameState.projectiles = [];
+            
+            const enemyCount = difficulty === 'EASY' ? 2 : difficulty === 'NORMAL' ? 4 : 6;
             
             for (let i = 0; i < enemyCount; i++) {
                 let x, y;
+                let attempts = 0;
                 do {
-                    x = Math.random() * (map.width - 40) + 20;
-                    y = Math.random() * (map.height - 40) + 20;
-                } while (map.isWall(x, y) || (Math.abs(x - gameState.x) < 40 && Math.abs(y - gameState.y) < 40));
-                gameState.enemies.push(new Enemy(x, y));
+                    x = 50 + Math.random() * 100;
+                    y = 50 + Math.random() * 100;
+                    attempts++;
+                } while ((map.isWall(x, y) || Math.abs(x - gameState.x) < 30) && attempts < 10);
+                
+                if (!map.isWall(x, y)) {
+                    gameState.enemies.push(new Enemy(x, y));
+                }
             }
 
             gameLoop();
